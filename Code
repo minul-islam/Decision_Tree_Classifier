@@ -1,0 +1,248 @@
+
+import random
+import numpy as np
+from sklearn import tree #the decision tree model we will train and evaluate
+import matplotlib.pyplot as plt
+
+#reading data from CSV file and storing in a list
+
+#open the 
+file=open("/home/mban/Assignment2/dataset.csv","r")
+i=0
+field=[] #initialization
+
+#reading from file and storing in field
+for line in file:
+	i=i+1
+	data=line.strip()
+	field.append(data.split(","))
+	#print i, field
+
+		
+#First finding unique items list in each column
+uniq_field=[]
+count=0
+for i in (1,3,4,5,6,7,8,9):
+	uniq_field.append([])
+	new_field=[] 
+	for item in field:
+	     if item[i] not in new_field:
+	         #print i,item[i]           
+	         new_field.append(item[i])
+	         uniq_field[count].append(item[i])  
+	     else:                      
+	         pass
+	
+	count=count+1
+#print uniq_field
+
+#converting all categorical data into numerical data based on output in uniq field
+
+#Preparing target list early and very early marked as 1
+#while others marked as 0 
+norm_field=[]
+for i in range(0,len(field)):
+	x=[]
+	x.append(field[i][0])	
+		
+	if (field[i][1]==uniq_field[0][0]):
+		x.append(1)
+	else:	x.append(0)
+		
+	x.append(field[i][2])
+
+	if (field[i][3]==uniq_field[1][0]):
+		x.append(1)
+	else:	
+		x.append(0)
+
+	if (field[i][4]==uniq_field[2][1]):
+		x.append(0)
+	elif (field[i][4]==uniq_field[2][2]):
+		x.append(1)
+	elif (field[i][4]==uniq_field[2][0]):
+		x.append(2)
+	else:	
+		x.append(3)
+
+	if (field[i][5]==uniq_field[3][0]):
+		x.append(1)
+	else:	
+		x.append(0)
+
+	if (field[i][6]==uniq_field[4][0]):
+		x.append(0)
+	elif(field[i][6]==uniq_field[4][1]):
+		x.append(1)
+	elif (field[i][6]==uniq_field[4][2]):
+		x.append(2)
+	else:	
+		x.append(3)
+
+	if (field[i][7]==uniq_field[5][0]):
+		x.append(1)
+	else:	
+		x.append(0)
+
+	if (field[i][8]==uniq_field[6][0]):
+		x.append(1)
+	else:	
+		x.append(0)
+	if (field[i][9]==uniq_field[7][1]):
+		x.append(1)
+	elif (field[i][9]==uniq_field[7][3]):
+		x.append(1)
+	else:	
+		x.append(0)
+	norm_field.append(x)
+
+
+ 	
+#randomly select 10% of data for test
+#NEA is choses as len(NEA_norm_field) is lower
+
+
+#Seperate into train and test and convert to numphy for balanced data (A) and unbalanced data(B)
+#------------------A--------------------------------
+#counting number of Early adopters(EA) vs not early adopoter(NEA)
+#seperating the
+EA_norm_field=[]
+NEA_norm_field=[]
+for i in range(0,len(field)):
+	if norm_field[i][9]==1:
+	        NEA_norm_field.append(norm_field[i])
+	else:
+		EA_norm_field.append(norm_field[i])
+
+test_inxA=random.sample(range(0,len(NEA_norm_field)),len(NEA_norm_field)*10/100)
+trainA=[]
+testA=[]
+
+for i in range(0,len(NEA_norm_field)):
+	if i in test_inxA:
+		testA.append(NEA_norm_field[i])
+		testA.append(EA_norm_field[i])		
+	else:
+		trainA.append(NEA_norm_field[i])
+		trainA.append(EA_norm_field[i])
+
+testAX=[]
+testAY=[]
+trainAX=[]
+trainAY=[]
+for i in range(0,len(testA)):
+	testAX.append([])
+	for j in range(0,8):
+		testAX[i].append(testA[i][j])
+	testAY.append(testA[i][9])
+	
+
+for i in range(0,len(trainA)):
+	trainAX.append([])
+	for j in range(0,8):
+		trainAX[i].append(trainA[i][j])
+	trainAY.append(trainA[i][9])
+#--------------------B-------------------------------------
+test_inxB=random.sample(range(0,len(norm_field)),len(norm_field)*10/100)
+trainB=[]
+testB=[]
+for i in range(0,len(norm_field)):
+	if i in test_inxB:
+		testB.append(norm_field[i])
+	else:	trainB.append(norm_field[i])
+
+testBX=[]
+testBY=[]
+trainBX=[]
+trainBY=[]
+for i in range(0,len(testB)):
+	testBX.append([])
+	for j in range(0,8):
+		testBX[i].append(testB[i][j])
+	testBY.append(testB[i][9])
+	
+
+for i in range(0,len(trainB)):
+	trainBX.append([])
+	for j in range(0,8):
+		trainBX[i].append(trainB[i][j])
+	trainBY.append(trainB[i][9])
+
+
+#-------------------------Numpy---------------
+trainAX = np.array(trainAX)
+trainAY = np.array(trainAY)
+testAX = np.array(testAX)
+testAY = np.array(testAY)
+trainBX = np.array(trainBX)
+trainBY = np.array(trainBY)
+testBX = np.array(testBX)
+testBY = np.array(testBY)
+
+#print trainX
+#print trainY
+
+#run decision tree------------------------------
+depth=[0,2,4,8,16]
+leaf_node=[0,2, 4, 8, 16, 32, 64, 128, 256]
+
+
+for i in range(0,len(depth)):
+	accuracyA=[]
+	accuracyB=[]
+	for j in range(0,len(leaf_node)):
+		if ((depth[i]==0) or (leaf_node[j]==0)):
+			if ((depth[i]==0) and (leaf_node[j]!=0)): clf = tree.DecisionTreeClassifier(max_leaf_nodes=leaf_node[j])
+				#print depth[i], leaf_node[j], "1"
+			elif ((depth[i]!=0) and (leaf_node[j]==0)): clf = tree.DecisionTreeClassifier(max_depth=depth[i])
+				#print depth[i], leaf_node[j], "2"
+			else:clf = tree.DecisionTreeClassifier()
+				#print depth[i], leaf_node[j], "3" 		
+		else:	clf = tree.DecisionTreeClassifier(max_depth=depth[i],max_leaf_nodes=leaf_node[j]) 
+		clf.fit(trainAX, trainAY)#tain the model A
+		predictionsA = clf.predict(testAX) #forecast A
+		
+		clf.fit(trainBX, trainBY)#tain the model B
+		predictionsB = clf.predict(testBX) #forecast B
+		#print predictions 
+		
+		#compute accuracy
+		correct=0
+		incorrect=0
+		for k in range(0, len(predictionsA)):
+			if (predictionsA[k] == testAY[k]):
+				correct += 1
+			else:
+				incorrect += 1
+	
+		accuracyA.append(float(correct)/(correct+incorrect))
+
+		correct=0
+		incorrect=0
+		for k in range(0, len(predictionsB)):
+			if (predictionsB[k] == testBY[k]):
+				correct += 1
+			else:
+				incorrect += 1
+	
+		accuracyB.append(float(correct)/(correct+incorrect))
+	print depth[i]
+	
+
+	
+	plt.subplot(2, 1, 1)
+	plt.plot(leaf_node, accuracyA,'>')
+	plt.title('Accuracy')
+	plt.ylabel('A')	
+	plt.axis([-10,280,0.55,0.65])
+	
+	plt.subplot(2, 1, 2)
+	plt.plot(leaf_node, accuracyB,'<')
+	plt.xlabel('max no of Leaf')
+	plt.ylabel('B')
+	plt.axis([-10,280,0.55,0.65])
+
+	plt.show()
+
+
+
